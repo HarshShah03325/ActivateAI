@@ -1,15 +1,10 @@
 from queue import Queue
-import matplotlib.pyplot as plt
-from scipy.io import wavfile
-import os
-from pydub import AudioSegment
 import numpy as np
 import pyaudio
 import matplotlib.mlab as mlab
 import time
 import sys
 from queue import Queue
-from threading import Thread
 
 timeout = time.time()+10
 chunk_duration = 0.5
@@ -18,9 +13,7 @@ fs = 44100
 chunk_samples = int(fs * chunk_duration)
 feed_duration = 10
 feed_samples = int(fs * feed_duration)
-# assert feed_duration/chunk_duration == int(feed_duration/chunk_duration)
 data = np.zeros(feed_samples, dtype='int16')
-
 q = Queue()
 run = True
 
@@ -106,9 +99,9 @@ class Realtime:
             q.put(data)
         return (in_data, pyaudio.paContinue)
 
-    def lastcall(self):
+    def run(self,callback):
         global run,q,chunk_duration,feed_duration,data
-        stream = self.get_audio_input_stream(callback = self.callback())
+        stream = self.get_audio_input_stream(callback)
         stream.start_stream()
         try:
             while run:
@@ -128,13 +121,33 @@ class Realtime:
         stream.close()
 
     
-def get_audio_input_stream(callback):
-    stream = pyaudio.PyAudio().open(
-        format=pyaudio.paInt16,
-        channels=1,
-        rate=fs,
-        input=True,
-        frames_per_buffer=chunk_samples,
-        input_device_index=0,
-        stream_callback=callback)
-    return stream
+    def callback(self,in_data, frame_count, time_info, status):
+        global run, timeout, data, silence_threshold    
+        if time.time() > timeout:
+            run = False        
+        data0 = np.frombuffer(in_data, dtype='int16')
+        if np.abs(data0).mean() < silence_threshold:
+            # sys.stdout.write('-')
+            print('-')
+            return (in_data, pyaudio.paContinue)
+        else:
+            # sys.stdout.write('.')
+            print('.')
+        data = np.append(data,data0)    
+        if len(data) > feed_samples:
+            data = data[-feed_samples:]
+            # Process data async by sending a queue.
+            q.put(data)
+        return (in_data, pyaudio.paContinue)
+
+    
+    def get_audio_input_stream(self,callback):
+        stream = pyaudio.PyAudio().open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=fs,
+            input=True,
+            frames_per_buffer=chunk_samples,
+            input_device_index=0,
+            stream_callback=callback)
+        return stream

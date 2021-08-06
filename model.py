@@ -1,8 +1,6 @@
-from keras import optimizers
-from keras.callbacks import ModelCheckpoint
 from keras.models import Model, load_model, Sequential
-from keras.layers import Dense, Activation, Dropout, Input, Masking, TimeDistributed, LSTM, Conv1D
-from keras.layers import GRU, Bidirectional, BatchNormalization, Reshape
+from keras.layers import Dense, Activation, Dropout, Input, Masking, TimeDistributed, Conv1D
+from keras.layers import GRU, BatchNormalization, Reshape
 from keras.optimizers import Adam
 import tensorflow as tf
 import warnings
@@ -43,9 +41,9 @@ def model(settings):
     
     return model
 
-def load_model():
+def load():
     '''Loads a pretrained model.'''
-
+    tf.compat.v1.disable_v2_behavior()
     model = load_model('./models/tr_model.h5')
     return model
 
@@ -55,7 +53,7 @@ def train_model(model,data):
 
     opt = Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999, decay=0.01)
     model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.fit(data.X, data.Y, batch_size=32, epochs=5)
+    model.fit(data.X_train, data.Y_train, batch_size=16, epochs=1)
     model.save('./models/trained_model.h5')
 
 

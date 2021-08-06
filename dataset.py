@@ -9,7 +9,6 @@ class Dataset:
     def __init__(self, settings):
         self.wake_sound = settings.wake_sound
         self.Ty = settings.Ty
-        self.m = settings.m
         self.positives = []
         self.negatives = []
         self.backgrounds = []
@@ -46,17 +45,17 @@ class Dataset:
     
     #Loads up the raw activates, negatives and backgrounds from our data
     def load_raw(self, path):
-        for filename in os.listdir(path + "activates"):
+        for filename in os.listdir(path + "/activates"):
             if filename.endswith("wav"):
-                positve = AudioSegment.from_wav(path + "activates/" + filename)
+                positve = AudioSegment.from_wav(path + "/activates/" + filename)
                 self.positives.append(positve)
-        for filename in os.listdir(path + "backgrounds"):
+        for filename in os.listdir(path + "/backgrounds"):
             if filename.endswith("wav"):
-                background = AudioSegment.from_wav(path + "backgrounds/" + filename)
+                background = AudioSegment.from_wav(path + "/backgrounds/" + filename)
                 self.backgrounds.append(background)
-        for filename in os.listdir(path + "negatives"):
+        for filename in os.listdir(path + "/negatives"):
             if filename.endswith("wav"):
-                negative = AudioSegment.from_wav(path + "negatives/" + filename)
+                negative = AudioSegment.from_wav(path + "/negatives/" + filename)
                 self.negatives.append(negative)
 
     
@@ -95,7 +94,7 @@ class Dataset:
         return new_background, segment_time
 
     # Insert ones in the output for next 50 timestamps
-    def insert_ones(y, segment_end_ms):
+    def insert_ones(self,y, segment_end_ms):
         _, Ty = y.shape
         segment_end_y = int(segment_end_ms * Ty / 10000.0)
         if segment_end_y < Ty:
@@ -105,9 +104,9 @@ class Dataset:
         return y
 
 
-    def create_single_example(self, background,i):
+    def create_single_example(self, background):
         background = background-20
-        y = np.zeors((1,self.Ty))
+        y = np.zeros((1,self.Ty))
         previous_segments = []
 
 
@@ -130,36 +129,39 @@ class Dataset:
                 background, random_negative, previous_segments)
 
         background = self.match_target_amplitude(background, -20.0)
-        file_handle = background.export(
-            './dataset/' + self.wake_sound + '/train/train' + str(i) + '.wav', format='wav')
-        print('File (train' + str(i) + '.wav) was saved in your directory.')
-        x = self.graph_spectrogram(
-            wav_file='./dataset/' + self.wake_sound + '/train/train' + str(i) + '.wav', plotting=False)
+        # file_handle = background.export(
+        #     './dataset/' + self.wake_sound + '/train/train' + str(i) + '.wav', format='wav')
+        # print('File (train' + str(i) + '.wav) was saved in your directory.')
+        # x = self.graph_spectrogram(
+        #     wav_file='./dataset/' + self.wake_sound + '/train/train' + str(i) + '.wav', plotting=False)
+        file_handle = background.export("train" + ".wav", format="wav")
+        x = self.graph_spectogram("train.wav")
 
         return x, y
 
 
-    def create_training_data(self):
-        self.load_raw()
-
+    def create_training_data(self,m):
+        self.load_raw('raw_data')
         np.random.seed(4563)
-        for i in range(self.m):
+        for i in range(m):
             if i%10==0:
                 print(str(i)+" Examples created")
-            x, y = self.create_training_example(self.backgrounds(self.backgrounds[i%2], i))
+            # random_index = np.random.randint(low=0, high=len(self.backgrounds))
+            # background = self.backgrounds[random_index]
+            x, y = self.create_single_example(self.backgrounds[i%2])
             self.X_train.append(x.swapaxes(0,1))
             self.Y_train.append(y.swapaxes(0,1))
         X = np.array(self.X_train)
         Y = np.array(self.Y_train)
 
-        np.save(f'./data/train_XY/X.npy',X)
-        np.save(f'./data/train_XY/Y.npy',Y)
+        np.save(f'./dataset/train_XY/X.npy',X)
+        np.save(f'./dataset/train_XY/Y.npy',Y)
 
     def load_dataset(self):
         self.X_train = np.load('./XY_train/X.npy')
         self.Y_train = np.load('./XY_train/Y.npy')
-        self.X_dev = np.load('./XY_dev/X_dev.npy')
-        self.Y_dev = np.load('./XY_dev/Y_dev.npy')
+        # self.X_dev = np.load('./XY_dev/X_dev.npy')
+        # self.Y_dev = np.load('./XY_dev/Y_dev.npy')
 
         
 
