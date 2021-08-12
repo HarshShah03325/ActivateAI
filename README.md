@@ -5,25 +5,25 @@ It is a Natural Language Processing Model developed with advanced Recurrent Neur
 Everytime it hears you say the word 'activate', it will produce a chiming sound.
 
 <p align="center">
-  <img width="460" height="300" src="/assets/logo.jpg">
+  <img width="460" height="460" src="/assets/logo.png">
 </p>
 
 
-## Table of Contents
+<!-- ## Table of Contents
 
 - [Generation of Data](#generation-of-data)
 - [Data preprocessing](#preprocessing-the-data)
 - [Recurrent Neural Network Model](#recurrent-neural-network-model)
 - [Training and development](#training-and-development)
-
 - [Demo](#demo)
-- [References](#references)
+- [References](#references) -->
 
 ## 🤖 Technology Stack
 - Framewoks: Keras, Tensorflow
+- Libraries : Pydub, Pyaudio, scipy, numpy, Matplotlib
 
 
-## [Generation of Data](#sections)
+## 🎧 [Generation of Data](#sections)
 
 - 3 types of audio recordings are present
   - Positives
@@ -34,7 +34,7 @@ Everytime it hears you say the word 'activate', it will produce a chiming sound.
 - Backgrounds are the audios which contain random noises
 - To generate training example, we insert positives and negatives into the backgrounds in a non-overlapping condition.
 
-## [Data preprocessing](#sections)
+## 📈 [Data preprocessing](#sections)
 - A microphone records little variations in air pressure over time, and it is these little variations in air pressure that your ear also perceives as sound. You can think of an audio recording is a long list of numbers measuring the little air pressure changes detected by the microphone. 
 - It is quite difficult to figure out from this "raw" representation of audio whether the word "activate" was said. In order to help our sequence model more easily learn to detect triggerwords, we will compute a spectrogram of the audio.
 - Visual representation of frequencies of a given signal with time is called Spectrogram. In a spectrogram representation plot one axis represents the time, the second axis represents frequencies and the colors represent magnitude (amplitude) of the observed frequency at a particular time.
@@ -46,7 +46,7 @@ Everytime it hears you say the word 'activate', it will produce a chiming sound.
 
 
 
-## [Recurrent Neural Network model](#sections)
+## 🌐 [Recurrent Neural Network model](#sections)
 
 - The architecture of the model consists of 1-D convolutional layers, GRU layers, and dense layers.
 - The bottom most layer is a 1D Convolution layer.It converts the input of length 5511 timestamps into 1375 output timestamps.
@@ -58,25 +58,30 @@ Everytime it hears you say the word 'activate', it will produce a chiming sound.
   <img width="460" height="600" src="/assets/model.png">
 </p>
 
-## [Training and development](#sections)
+<!-- ## [Training and development](#sections)
 - The model has about 50,000 trainable parameters. The model is trained on a large training set of 4000 examples generated.
 - Adam optimizer and binary_crossentropy loss function were used for training.
-
-## [Project Setup](#sections)
+ -->
+## 🛠️ [Project Setup](#sections)
 
 ```
-git clone
+https://github.com/HarshShah03325/ActivateAI.git
+```
+```
+pip install -r requirements.txt
+```
+```
+python main.py
 ```
 
 
-
-## [Demo]
-
+## 🖼 [Demo](#sections)
 
 
 
 
-## [References]
+
+## 📚 [References](#sections)
 - This implementation was inspired by the Deep Learning Specialization on Coursera by _Andrew Ng_.
 - [Trigger Word Detection - Coursera](https://www.coursera.org/learn/nlp-sequence-models/lecture/Li4ts/trigger-word-detection)
 
