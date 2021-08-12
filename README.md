@@ -41,7 +41,7 @@ Everytime it hears you say the word 'activate', it will produce a chiming sound.
 - We compute the following spectogram from our training example.
 
 <p align="center">
-  <img width="460" height="300" src="/assets/spectogram.png">
+  <img width="460" height="400" src="/assets/spectrogram.png">
 </p>
 
 
@@ -55,7 +55,7 @@ Everytime it hears you say the word 'activate', it will produce a chiming sound.
 - A unidirectional RNN is used rather than a bi-directional RNN, since we want to detect the trigger word immediately after its said.
 
 <p align="center">
-  <img width="460" height="300" src="/assets/model.png">
+  <img width="460" height="600" src="/assets/model.png">
 </p>
 
 ## [Training and development](#sections)
