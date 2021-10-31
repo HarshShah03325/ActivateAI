@@ -75,8 +75,11 @@ python main.py
 ```
 
 
-## 🖼 [Demo](#sections)
-
+## [Results](#sections)
+- The model shows an accuracy of 92.3 percent on the dev-set.
+![](assets/metrics.png)
+- The relatively lower values of recall, precision and f1_score indicates that accuracy is not a good metric for evaluation.
+- Since the labels are heavily skewed with 0's, a neural network that just predicts 0's would get accuracy of around 90 percent.
 
 
 
