@@ -8,7 +8,7 @@ from queue import Queue
 from pydub import AudioSegment
 from pydub.playback import play
 
-timeout = time.time()+10
+timeout = time.time() + 30
 chunk_duration = 0.5
 silence_threshold = 100
 fs = 44100 
@@ -91,8 +91,7 @@ class Realtime:
         return pxx
 
     
-
-    def callback(self,in_data):
+    def callback(self,in_data, frame_count, time_info, status):
         """
         Function that enables real-time prediction of the audio using a queue. Compares the mean of data with silence threshold and
         appends it to queue if greater.
@@ -139,7 +138,7 @@ class Realtime:
                 preds = self.detect_triggerword_spectrum(spectrum)
                 new_trigger = self.has_new_triggerword(preds, chunk_duration, feed_duration)
                 if new_trigger:
-                    sys.stdout.write('got it')
+                    sys.stdout.write('Trigger word detected!')
                     sound = AudioSegment.from_wav('chime.wav')
                     play(sound)
                     sys.exit()
