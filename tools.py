@@ -5,6 +5,8 @@ import matplotlib.mlab as mlab
 import time
 import sys
 from queue import Queue
+from pydub import AudioSegment
+from pydub.playback import play
 
 timeout = time.time()+10
 chunk_duration = 0.5
@@ -69,7 +71,15 @@ class Realtime:
         return False
 
     def get_spectrogram(self,data):
-        
+        """
+        Function to compute spectrogram.
+
+        Arguments:
+        data -- stream of np.array after processing the raw audio data
+
+        Returns:
+        pxx - computed spectrogram of the data (2D np.array)
+        """
         nfft = 200 # Length of each window segment
         fs = 8000 # Sampling frequencies
         noverlap = 120 # Overlap between windows
@@ -82,7 +92,18 @@ class Realtime:
 
     
 
-    def callback(self,in_data, frame_count, time_info, status):
+    def callback(self,in_data):
+        """
+        Function that enables real-time prediction of the audio using a queue. Compares the mean of data with silence threshold and
+        appends it to queue if greater.
+
+        Arguments:
+        in_data -- input from the audio format(np.array).
+
+        Returns:
+        in_data -- same as input data, used to fill in the queue.
+        pyaudio.paContinue -- signal to continue the callback function.
+        """
         global run, timeout, data, silence_threshold    
         if time.time() > timeout:
             run = False        
@@ -99,7 +120,15 @@ class Realtime:
             q.put(data)
         return (in_data, pyaudio.paContinue)
 
+
     def run(self,callback):
+        """
+        Function that runs on stream of input data using callback function and predicts the presence of new trigger word.
+        Produces a chiming sound if detected.
+
+        Arguments:
+        callback function
+        """
         global run,q,chunk_duration,feed_duration,data
         stream = self.get_audio_input_stream(callback)
         stream.start_stream()
@@ -110,8 +139,10 @@ class Realtime:
                 preds = self.detect_triggerword_spectrum(spectrum)
                 new_trigger = self.has_new_triggerword(preds, chunk_duration, feed_duration)
                 if new_trigger:
-                    sys.stdout.write('1')
-                    print('got it')
+                    sys.stdout.write('got it')
+                    sound = AudioSegment.from_wav('chime.wav')
+                    play(sound)
+                    sys.exit()
         except (KeyboardInterrupt, SystemExit):
             stream.stop_stream()
             stream.close()
@@ -121,27 +152,16 @@ class Realtime:
         stream.close()
 
     
-    def callback(self,in_data, frame_count, time_info, status):
-        global run, timeout, data, silence_threshold    
-        if time.time() > timeout:
-            run = False        
-        data0 = np.frombuffer(in_data, dtype='int16')
-        if np.abs(data0).mean() < silence_threshold:
-            # sys.stdout.write('-')
-            print('-')
-            return (in_data, pyaudio.paContinue)
-        else:
-            # sys.stdout.write('.')
-            print('.')
-        data = np.append(data,data0)    
-        if len(data) > feed_samples:
-            data = data[-feed_samples:]
-            # Process data async by sending a queue.
-            q.put(data)
-        return (in_data, pyaudio.paContinue)
-
-    
     def get_audio_input_stream(self,callback):
+        """
+        Function to get stream of audio data from the device using pyaudio library.
+
+        Arguments:
+        callback function to be called on the stream.
+
+        Returns:
+        stream of audio data in frames.
+        """
         stream = pyaudio.PyAudio().open(
             format=pyaudio.paInt16,
             channels=1,

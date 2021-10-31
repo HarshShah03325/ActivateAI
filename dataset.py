@@ -18,6 +18,15 @@ class Dataset:
         self.Y_dev = []
 
     def graph_spectogram(self,wav_file,plotting=False):
+        """
+        Function to compute spectrogram using a wave file using matplotlib and plot it.
+        
+        Arguments:
+        wav_file(.wav) -- wave file to compute spectrogram.
+
+        Returns:
+        pxx -- computed values of spectrogram of wave file(2D np.array).
+        """
         rate, data = wavfile.read(wav_file)
         nfft = 200 # Length of each window segment
         fs = 8000 # Sampling frequencies
@@ -37,14 +46,27 @@ class Dataset:
         return pxx
 
     
-    # Used to standardize volume of audio clip
     def match_target_amplitude(self, sound, target_dBFS):
+        """
+        Function Used to standardize volume of audio clip.
+
+        Arguments:
+        target_dBFS -- dBFS used to standardize the input sound data.- 
+
+        Returns:
+        change_in_dBFS -- Processed data using target_dBFS(np.array).
+        """
         change_in_dBFS = target_dBFS - sound.dBFS
         return sound.apply_gain(change_in_dBFS)
 
     
-    #Loads up the raw activates, negatives and backgrounds from our data
+    
     def load_raw(self, path):
+        """
+        Function that loads up the raw activates, negatives and backgrounds from our data.
+
+        Arguments: path of the directory which contains positive, negative and background sound files.
+        """
         for filename in os.listdir(path + "/activates"):
             if filename.endswith("wav"):
                 positve = AudioSegment.from_wav(path + "/activates/" + filename)
@@ -60,13 +82,32 @@ class Dataset:
 
     
     def get_random_time_segment(self, segment_ms):
+        """
+        Function that selects a random time segment from low=0 to high=(10000-len(segment selected)).
+
+        Arguments:
+        segment_ms -- length of the time segment to be selected.
+
+        Returns:
+        Start and end positions of selected time segment.
+        """
         segment_start = np.random.randint(low=0, high=10000-segment_ms)   
         segment_end = segment_start + segment_ms - 1
         return (segment_start, segment_end)
 
 
-    #Check whether the present segment overlaps with the previous segments
+    
     def is_overlapping(self, segment, previous_segments):
+        """
+        Function to check whether the present segment overlaps with the previous segments.
+
+        Arguments:
+        segment -- randomly selected segment.
+        previous_segments -- list of previously selected time segments.
+
+        Returns:
+        overlap(bool) -- True if there is an overlap, false otherwise.
+        """
         segment_start, segment_end = segment
         overlap=False
         for previous_start, previous_end in previous_segments:
@@ -74,9 +115,20 @@ class Dataset:
                 overlap = True
         return overlap
 
-    # Insert audio clip(positive, negative or background) such that it does not overlap  
+    
     def insert_audio_clip(self, background, audio_clip, previous_segments):
-        
+        """
+        Function to insert audio clip(positive, negative or background) such that it does not overlap.
+
+        Arguments:
+        background -- background chosen to insert the previous segments and the audio clip.
+        audio_clip --   audio_clip to be inserted in the background.
+        previous_segments -- list of previously selected time segments.
+
+        Returns:
+        new_background -- updated background with inserted clips.
+        segment_time -- Time stamps at which the audio clip is inserted.
+        """
         segment_ms = len(audio_clip)
         segment_time = self.get_random_time_segment(segment_ms)
     
@@ -93,8 +145,18 @@ class Dataset:
         
         return new_background, segment_time
 
-    # Insert ones in the output for next 50 timestamps
+    
     def insert_ones(self,y, segment_end_ms):
+        """
+        Function used to insert ones in the output for next 50 timestamps.
+
+        Arguments:
+        y -- result of training example(np.array).
+        segment_end_ms -- timestamp starting from which ones are to be inserted(int).
+
+        Returns:
+        y -- updated value of y(np.array).
+        """
         _, Ty = y.shape
         segment_end_y = int(segment_end_ms * Ty / 10000.0)
         if segment_end_y < Ty:
@@ -105,7 +167,18 @@ class Dataset:
 
 
     def create_single_example(self, background):
-        background = background-20
+        """
+        Function to create a singe training example.
+
+        Arguments:
+        background -- background used to create the example by inserting positives and negatives.
+
+        Returns:
+        x -- spectrogram of the example created(np.array).
+        y -- corresponding result of the training example(np.array).
+        """
+        
+        background = background-20 # Make the background lighter.
         y = np.zeros((1,self.Ty))
         previous_segments = []
 
@@ -129,11 +202,6 @@ class Dataset:
                 background, random_negative, previous_segments)
 
         background = self.match_target_amplitude(background, -20.0)
-        # file_handle = background.export(
-        #     './dataset/' + self.wake_sound + '/train/train' + str(i) + '.wav', format='wav')
-        # print('File (train' + str(i) + '.wav) was saved in your directory.')
-        # x = self.graph_spectrogram(
-        #     wav_file='./dataset/' + self.wake_sound + '/train/train' + str(i) + '.wav', plotting=False)
         file_handle = background.export("train" + ".wav", format="wav")
         x = self.graph_spectogram("train.wav")
 
@@ -141,6 +209,16 @@ class Dataset:
 
 
     def create_training_data(self,m):
+        """
+        Function to create 'm' number of training examples.
+
+        Arguments:
+        m - number of training examples to be created(int).
+
+        Returns:
+        X - training data( dim = (m, , )).
+        Y - Output of the training data( dim = (m, )).
+        """
         self.load_raw('raw_data')
         np.random.seed(4563)
         for i in range(m):
@@ -157,7 +235,14 @@ class Dataset:
         np.save(f'./dataset/train_XY/X.npy',X)
         np.save(f'./dataset/train_XY/Y.npy',Y)
 
+        return X,Y
+
+
     def load_dataset(self):
+        """
+        Function to load the dataset created.
+        X.npy and Y.npy.
+        """
         self.X_train = np.load('./XY_train/X.npy')
         self.Y_train = np.load('./XY_train/Y.npy')
         # self.X_dev = np.load('./XY_dev/X_dev.npy')
