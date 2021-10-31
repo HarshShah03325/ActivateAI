@@ -84,9 +84,6 @@ python main.py
 
 
 
-## 📚 [References](#sections)
-- This implementation was inspired by the Deep Learning Specialization on Coursera by _Andrew Ng_.
-- [Trigger Word Detection - Coursera](https://www.coursera.org/learn/nlp-sequence-models/lecture/Li4ts/trigger-word-detection)
 
 
 
